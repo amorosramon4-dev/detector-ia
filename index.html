@@ -1,185 +1,187 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Detector de IA Gratis</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
-      background: white;
-      padding: 30px;
-      width: 500px;
-      border-radius: 15px;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-      text-align: center;
-    }
-
-    h2 {
-      color: #333;
-      margin-bottom: 20px;
-      font-size: 26px;
-    }
-
-    p {
-      color: #555;
-      font-size: 14px;
-    }
-
-    textarea {
-      width: 100%;
-      height: 150px;
-      padding: 12px;
-      font-size: 14px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      resize: none;
-      margin-bottom: 15px;
-      transition: border 0.3s;
-    }
-    textarea:focus {
-      border-color: #007bff;
-      outline: none;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      color: white;
-      background: #007bff;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.3s, transform 0.2s;
-    }
-    button:hover {
-      background: #0056b3;
-      transform: scale(1.05);
-    }
-
-    .result {
-      margin-top: 20px;
-      font-weight: bold;
-      font-size: 18px;
-      color: #333;
-      min-height: 24px;
-      text-align: left;
-    }
-
-    .progress-bar {
-      width: 100%;
-      background: #eee;
-      border-radius: 10px;
-      margin-top: 15px;
-      overflow: hidden;
-      height: 25px;
-    }
-    .progress {
-      height: 100%;
-      width: 0%;
-      background: #007bff;
-      text-align: center;
-      line-height: 25px;
-      color: white;
-      font-weight: bold;
-      transition: width 1s ease, background 1s ease;
-    }
-
-    .note {
-      font-size: 12px;
-      color: #777;
-      margin-top: 10px;
-    }
-
-    /* Resaltado de palabras IA */
-    .ia-word {
-      background-color: orange;
-      color: white;
-      padding: 2px 4px;
-      border-radius: 3px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detector de IA Gratis - Saber si un texto fue escrito por IA</title>
+<style>
+* {margin:0; padding:0; box-sizing:border-box;}
+body, html {height:100%; font-family: Arial, sans-serif; overflow: hidden;}
+canvas {position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1;}
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+  margin: 50px auto;
+  background: rgba(173, 216, 230, 0.9);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+h1 {text-align:center; margin-bottom:15px;}
+textarea {width:100%; height:120px; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ccc; resize:none;}
+button {width:100%; padding:12px; background:#007bff; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer; transition:0.3s;}
+button:hover {background:#0056b3;}
+.result {margin-top:15px; font-weight:bold; word-wrap: break-word;}
+.highlight {background-color: orange; color:#000;}
+.progress-container {width:100%; background:#ccc; border-radius:8px; margin-top:10px; height:25px; overflow:hidden;}
+.progress-bar {height:100%; width:0%; background:#28a745; color:white; text-align:center; line-height:25px; transition:0.5s;}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h2>Detector de Texto con IA</h2>
-    <p>Pega un texto y descubre si fue escrito por inteligencia artificial.</p>
-    <textarea id="textInput" placeholder="Escribe o pega tu texto aquí..."></textarea>
-    <button onclick="analyzeText()">Analizar texto</button>
-    <div class="result" id="result"></div>
-    <div class="progress-bar">
-      <div class="progress" id="progress">0%</div>
-    </div>
-    <p class="note">⚠️ Esto es solo una estimación, no 100% exacto.</p>
+<canvas id="bgCanvas"></canvas>
+<div class="container">
+  <h1>Detector de IA Gratis</h1>
+  <textarea id="textInput" placeholder="Pega tu texto aquí..."></textarea>
+  <button onclick="analyzeText()">Analizar texto</button>
+  <div class="progress-container">
+    <div class="progress-bar" id="progress">0%</div>
   </div>
+  <div class="result" id="result"></div>
+  <p style="font-size:12px; margin-top:10px;">⚠️ Resultados orientativos, no 100% exactos.</p>
+</div>
 
-  <script>
-    function analyzeText() {
-      const text = document.getElementById('textInput').value;
+<script>
+function analyzeText() {
+  const text = document.getElementById('textInput').value;
+  if(text.length < 20){
+    document.getElementById('result').innerHTML = 'Escribe un texto más largo.';
+    document.getElementById('progress').style.width = '0%';
+    document.getElementById('progress').style.background = '#ccc';
+    document.getElementById('progress').innerText = '0%';
+    return;
+  }
+  const words = text.split(/\s+/);
+  let longWords = words.filter(w=>w.length>7).length;
+  let score = Math.floor((longWords/words.length)*120 - 10);
+  if(score<0) score=0;
+  if(score>100) score=100;
 
-      if (text.length < 20) {
-        document.getElementById('result').innerHTML = 'Escribe un texto más largo.';
-        document.getElementById('progress').style.width = '0%';
-        document.getElementById('progress').style.background = '#ccc';
-        document.getElementById('progress').innerText = '0%';
-        return;
-      }
+  let color = '#28a745';
+  if(score>60) color='#ffc107';
+  if(score>80) color='#dc3545';
 
-      const words = text.split(/\s+/);
-      const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 0);
+  let mensaje = (score>50) ? "Texto probablemente generado por IA 🤖" : "Texto probablemente humano 👤";
 
-      // 1️⃣ Palabras largas
-      let longWords = words.filter(w => w.length > 7).length;
-      let longWordsScore = (longWords / words.length) * 40; // máximo 40 puntos
+  const highlighted = words.map(w=>{
+    if(w.length>7) return `<span class="highlight">${w}</span>`;
+    return w;
+  }).join(' ');
 
-      // 2️⃣ Longitud promedio de frases
-      let avgWordsPerSentence = words.length / sentences.length;
-      let sentenceScore = Math.min(30, Math.max(0, (avgWordsPerSentence - 10) * 2)); // máximo 30 puntos
+  document.getElementById('result').innerHTML = `${mensaje} (${score}%)<br><br>${highlighted}`;
+  const progress = document.getElementById('progress');
+  progress.style.width = score + '%';
+  progress.style.background = color;
+  progress.innerText = score + '%';
+}
 
-      // 3️⃣ Longitud total del texto
-      let lengthScore = Math.min(30, text.length / 10); // máximo 30 puntos
+// Fondo oceánico animado
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
 
-      // Score total
-      let score = Math.floor(longWordsScore + sentenceScore + lengthScore);
+class Fish {
+  constructor() {
+    this.x = Math.random() * w;
+    this.y = Math.random() * h;
+    this.size = 20 + Math.random()*20;
+    this.speed = 1 + Math.random()*2;
+    this.angle = Math.random()*Math.PI*2;
+    this.color = `hsl(${Math.random()*360}, 70%, 60%)`;
+  }
+  update() {
+    this.x += Math.cos(this.angle) * this.speed;
+    this.y += Math.sin(this.angle) * this.speed;
+    if(this.x > w + 50) this.x = -50;
+    if(this.x < -50) this.x = w + 50;
+    if(this.y > h + 50) this.y = -50;
+    if(this.y < -50) this.y = h + 50;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.beginPath();
+    ctx.fillStyle = this.color;
+    ctx.moveTo(this.size/2,0);
+    ctx.lineTo(-this.size/2, -this.size/3);
+    ctx.lineTo(-this.size/2, this.size/3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+}
 
-      if (score > 100) score = 100;
-      if (score < 0) score = 0;
+class Alga {
+  constructor() {
+    this.x = Math.random() * w;
+    this.baseY = h;
+    this.height = 50 + Math.random()*60;
+    this.width = 6 + Math.random()*4;
+    this.sway = Math.random() * 0.5;
+    this.offsetX = 0;
+  }
+  update() {
+    this.offsetX = 10 * Math.sin(Date.now()*0.002 + this.sway);
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.strokeStyle='green';
+    ctx.lineWidth = this.width;
+    ctx.moveTo(this.x, this.baseY);
+    ctx.quadraticCurveTo(this.x + this.offsetX, this.baseY - this.height/2, this.x, this.baseY - this.height);
+    ctx.stroke();
+  }
+}
 
-      // Color de barra según probabilidad
-      let color = '#28a745';
-      if (score > 60) color = '#ffc107';
-      if (score > 80) color = '#dc3545';
-
-      // Mensaje IA o humano
-      let mensaje = (score > 50) 
-        ? "Texto probablemente generado por IA 🤖" 
-        : "Texto probablemente humano 👤";
-
-      // Resaltar palabras largas
-      const highlighted = words.map(w => {
-        if (w.length > 7) {
-          return `<span class="ia-word">${w}</span>`;
-        }
-        return w;
-      }).join(' ');
-
-      // Mostrar resultados
-      document.getElementById('result').innerHTML = `${mensaje} (${score}%)<br><br>${highlighted}`;
-
-      const progress = document.getElementById('progress');
-      progress.style.width = score + '%';
-      progress.style.background = color;
-      progress.innerText = score + '%';
+class Bubble {
+  constructor() {
+    this.x = Math.random()*w;
+    this.y = h + Math.random()*200;
+    this.radius = 2 + Math.random()*4;
+    this.speed = 0.5 + Math.random()*1;
+  }
+  update() {
+    this.y -= this.speed;
+    if(this.y < -10) {
+      this.y = h + Math.random()*100;
+      this.x = Math.random()*w;
     }
-  </script>
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+const fishes = [];
+const algas = [];
+const bubbles = [];
+
+for(let i=0; i<30; i++) fishes.push(new Fish());
+for(let i=0; i<60; i++) algas.push(new Alga());
+for(let i=0; i<100; i++) bubbles.push(new Bubble());
+
+function animate() {
+  ctx.fillStyle='rgba(0,150,200,0.2)';
+  ctx.fillRect(0,0,w,h);
+
+  algas.forEach(a => { a.update(); a.draw(); });
+  fishes.forEach(f => { f.update(); f.draw(); });
+  bubbles.forEach(b => { b.update(); b.draw(); });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+window.addEventListener('resize', ()=>{
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+});
+</script>
 </body>
 </html>
