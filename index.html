@@ -6,14 +6,13 @@
 <title>Detector de IA Gratis</title>
 <style>
 * {margin:0; padding:0; box-sizing:border-box;}
-body, html {height:100%; font-family: Arial, sans-serif; overflow: hidden;}
-canvas {position: fixed; top:0; left:0; width:100%; height:100%; z-index:-1;}
+body, html {height:100%; font-family: Arial, sans-serif; background:#FFF5E6;}
 .container {
   position: relative;
   z-index: 1;
   max-width: 500px;
   margin: 50px auto;
-  background: rgba(173, 216, 230, 0.9);
+  background: rgba(255,255,255,0.9);
   padding: 25px;
   border-radius: 15px;
   box-shadow: 0 0 20px rgba(0,0,0,0.2);
@@ -31,13 +30,12 @@ ul li {margin-bottom:5px; cursor:pointer; color:blue; text-decoration:underline;
 </style>
 </head>
 <body>
-<canvas id="bgCanvas"></canvas>
 <div class="container" id="container">
   <h1>Detector de IA Gratis</h1>
   <textarea id="textInput" placeholder="Pega tu texto aquí..."></textarea>
   <button onclick="analyzeText()">Analizar texto</button>
   <div class="progress-container">
-    <div class="progress-bar" id="progress">0%</div>
+    <div class="progress-bar" id="progress"></div>
   </div>
   <div class="result" id="result"></div>
   <p style="font-size:12px; margin-top:10px;">⚠️ Resultados orientativos, no 100% exactos.</p>
@@ -51,21 +49,18 @@ ul li {margin-bottom:5px; cursor:pointer; color:blue; text-decoration:underline;
 </div>
 
 <script>
-// VARIABLES
 let flashInterval = null;
 
-// DETECTOR DE IA
 function analyzeText(){
   const text=document.getElementById('textInput').value.trim();
   const container = document.getElementById('container');
 
-  // Si texto corto, reiniciar
   if(text.length<20){
     document.getElementById('result').innerHTML='Escribe un texto más largo.';
     document.getElementById('progress').style.width='0%';
     document.getElementById('progress').style.background='#ccc';
-    document.getElementById('progress').innerText='0%';
-    container.style.background='rgba(173, 216, 230, 0.9)';
+    document.getElementById('progress').innerText='';
+    container.style.background='rgba(255,255,255,0.9)';
     if(flashInterval) clearInterval(flashInterval);
     return;
   }
@@ -84,27 +79,26 @@ function analyzeText(){
   let score = Math.floor((longWords/words.length)*60 + repeats*15 + punctuation*2);
   if(score>100) score=100;
 
-  // Color según porcentaje
   let color;
   if(score<=35) color='green';
   else if(score<=70) color='orange';
   else color='red';
 
-  // Actualizar resultado y barra
   const highlighted = words.map(w=>w.length>7?`<span class="highlight">${w}</span>`:w).join(' ');
   const progress=document.getElementById('progress');
   progress.style.width=score+'%';
   progress.style.background=color;
-  progress.innerText=score+'%';
-  document.getElementById('result').innerHTML=`${score>50?"Texto probablemente generado por IA 🤖":"Texto probablemente humano 👤"} (${score}%)<br><br>${highlighted}`;
+  progress.innerText=''; 
 
-  // Parpadeo del cuadro
+  document.getElementById('result').innerHTML=`${score>50?"Texto probablemente generado por IA 🤖":"Texto probablemente humano 👤"}<br>
+  <strong>Porcentaje estimado de IA: ${score}%</strong><br><br>${highlighted}`;
+
   if(flashInterval) clearInterval(flashInterval);
   let opacity = 0;
   let increasing = true;
   flashInterval = setInterval(()=>{
-    if(text.length === 0){ // detener si borran texto
-      container.style.background='rgba(173, 216, 230, 0.9)';
+    if(document.getElementById('textInput').value.trim().length === 0){
+      container.style.background='rgba(255,255,255,0.9)';
       clearInterval(flashInterval);
       return;
     }
@@ -114,50 +108,16 @@ function analyzeText(){
     container.style.background=`rgba(${color==='green'?'0,255,0':color==='orange'?'255,165,0':'255,0,0'},${0.3 + opacity*0.7})`;
   }, 20);
 
-  // Detener parpadeo después de 5 segundos
   setTimeout(()=>{
     clearInterval(flashInterval);
-    container.style.background='rgba(173, 216, 230, 0.9)';
-  }, 5000);
+    container.style.background='rgba(255,255,255,0.9)';
+  },5000);
 }
 
-// FONDO ANIMADO
-const canvas=document.getElementById('bgCanvas');
-const ctx=canvas.getContext('2d');
-let w=canvas.width=window.innerWidth;
-let h=canvas.height=window.innerHeight;
-
-class Fish{ constructor(){this.x=Math.random()*w; this.y=Math.random()*h; this.size=20+Math.random()*20; this.speed=1+Math.random()*2; this.angle=Math.random()*Math.PI*2; this.color=`hsl(${Math.random()*360},70%,60%)`; } 
-update(){this.x+=Math.cos(this.angle)*this.speed; this.y+=Math.sin(this.angle)*this.speed; if(this.x>w+50)this.x=-50;if(this.x<-50)this.x=w+50;if(this.y>h+50)this.y=-50;if(this.y<-50)this.y=h+50;}
-draw(){ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.angle); ctx.beginPath(); ctx.fillStyle=this.color; ctx.moveTo(this.size/2,0); ctx.lineTo(-this.size/2,-this.size/3); ctx.lineTo(-this.size/2,this.size/3); ctx.closePath(); ctx.fill(); ctx.restore();}}
-
-class Alga{ constructor(){this.x=Math.random()*w; this.baseY=h; this.height=50+Math.random()*60; this.width=6+Math.random()*4; this.sway=Math.random()*0.5;this.offsetX=0;} 
-update(){this.offsetX=10*Math.sin(Date.now()*0.002+this.sway);} 
-draw(){ctx.beginPath();ctx.strokeStyle='green';ctx.lineWidth=this.width;ctx.moveTo(this.x,this.baseY);ctx.quadraticCurveTo(this.x+this.offsetX,this.baseY-this.height/2,this.x,this.baseY-this.height);ctx.stroke();}}
-
-class Bubble{ constructor(){this.x=Math.random()*w; this.y=h+Math.random()*200; this.radius=2+Math.random()*4; this.speed=0.5+Math.random()*1;} 
-update(){this.y-=this.speed;if(this.y<-10){this.y=h+Math.random()*100;this.x=Math.random()*w;}} 
-draw(){ctx.beginPath();ctx.fillStyle='rgba(255,255,255,0.6)';ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.fill();}}
-
-const fishes=[], algas=[], bubbles=[];
-for(let i=0;i<30;i++) fishes.push(new Fish());
-for(let i=0;i<60;i++) algas.push(new Alga());
-for(let i=0;i<100;i++) bubbles.push(new Bubble());
-
-function animate(){ 
-  ctx.fillStyle='rgba(0,150,200,0.2)'; ctx.fillRect(0,0,w,h); 
-  algas.forEach(a=>{a.update();a.draw();}); 
-  fishes.forEach(f=>{f.update();f.draw();}); 
-  bubbles.forEach(b=>{b.update();b.draw();}); 
-  requestAnimationFrame(animate);
-}
-animate();
-window.addEventListener('resize',()=>{ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; });
-
-// TEXTOS DE PRUEBA
+// Textos de prueba
 const textoHumano="Hoy fui al parque y jugué con mis amigos durante un rato. Nos divertimos mucho y luego comimos helado.";
 const textoIntermedio="En la actualidad, la inteligencia artificial ha transformado significativamente múltiples industrias. La automatización de procesos repetitivos permite mejorar la eficiencia operativa.";
-const textoIAAlta="La inteligencia artificial avanzada, sofisticada, compleja y profundamente optimizada, con algoritmos predictivos altamente especializados, procesamiento lingüístico extremadamente elaborado, estructuras sintácticas intricadas, repeticiones frecuentes, combinaciones semánticas inusuales y análisis estadístico exhaustivo, genera resultados excepcionalmente precisos y consistentes, superando la capacidad humana convencional en numerosos escenarios, demostrando coherencia, redundancia, complejidad léxica, estructuras elaboradas y patrones lingüísticos recurrentes, asegurando un rendimiento superior, reiterando conceptos complejos, optimizando modelos predictivos, integrando múltiples procesos computacionales, y mostrando una uniformidad sintáctica y semántica avanzada, con alta densidad de palabras largas, repeticiones frecuentes, y puntuación abundante para maximizar el índice de detección de inteligencia artificial.";
+const textoIAAlta="La inteligencia artificial avanzada, sofisticada, compleja y optimizada, con algoritmos predictivos especializados, procesamiento lingüístico elaborado, estructuras sintácticas intricadas, repeticiones frecuentes, combinaciones semánticas inusuales y análisis estadístico exhaustivo, generando resultados precisos y consistentes, superando la capacidad humana convencional, demostrando coherencia, redundancia, complejidad léxica y patrones lingüísticos recurrentes, asegurando un rendimiento superior, optimizando modelos predictivos e integrando múltiples procesos computacionales.";
 
 document.getElementById('texto1').onclick=()=>{document.getElementById('textInput').value=textoHumano; analyzeText();}
 document.getElementById('texto2').onclick=()=>{document.getElementById('textInput').value=textoIntermedio; analyzeText();}
