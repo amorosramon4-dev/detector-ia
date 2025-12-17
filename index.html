@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detector de IA Gratis</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #ACB6E5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      width: 500px;
+      border-radius: 15px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 26px;
+    }
+
+    p {
+      color: #555;
+      font-size: 14px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 12px;
+      font-size: 14px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      resize: none;
+      margin-bottom: 15px;
+      transition: border 0.3s;
+    }
+    textarea:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      color: white;
+      background: #007bff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #333;
+      min-height: 24px;
+      text-align: left;
+    }
+
+    .progress-bar {
+      width: 100%;
+      background: #eee;
+      border-radius: 10px;
+      margin-top: 15px;
+      overflow: hidden;
+      height: 25px;
+    }
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: #007bff;
+      text-align: center;
+      line-height: 25px;
+      color: white;
+      font-weight: bold;
+      transition: width 1s ease, background 1s ease;
+    }
+
+    .note {
+      font-size: 12px;
+      color: #777;
+      margin-top: 10px;
+    }
+
+    /* Resaltado de palabras IA */
+    .ia-word {
+      background-color: orange;
+      color: white;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Detector de Texto con IA</h2>
+    <p>Pega un texto y descubre si fue escrito por inteligencia artificial.</p>
+    <textarea id="textInput" placeholder="Escribe o pega tu texto aquí..."></textarea>
+    <button onclick="analyzeText()">Analizar texto</button>
+    <div class="result" id="result"></div>
+    <div class="progress-bar">
+      <div class="progress" id="progress">0%</div>
+    </div>
+    <p class="note">⚠️ Esto es solo una estimación, no 100% exacto.</p>
+  </div>
+
+  <script>
+    function analyzeText() {
+      const text = document.getElementById('textInput').value;
+
+      if (text.length < 20) {
+        document.getElementById('result').innerHTML = 'Escribe un texto más largo.';
+        document.getElementById('progress').style.width = '0%';
+        document.getElementById('progress').style.background = '#ccc';
+        document.getElementById('progress').innerText = '0%';
+        return;
+      }
+
+      const words = text.split(/\s+/);
+      const sentences = text.split(/[.!?]/).filter(s => s.trim().length > 0);
+
+      // 1️⃣ Palabras largas
+      let longWords = words.filter(w => w.length > 7).length;
+      let longWordsScore = (longWords / words.length) * 40; // máximo 40 puntos
+
+      // 2️⃣ Longitud promedio de frases
+      let avgWordsPerSentence = words.length / sentences.length;
+      let sentenceScore = Math.min(30, Math.max(0, (avgWordsPerSentence - 10) * 2)); // máximo 30 puntos
+
+      // 3️⃣ Longitud total del texto
+      let lengthScore = Math.min(30, text.length / 10); // máximo 30 puntos
+
+      // Score total
+      let score = Math.floor(longWordsScore + sentenceScore + lengthScore);
+
+      if (score > 100) score = 100;
+      if (score < 0) score = 0;
+
+      // Color de barra según probabilidad
+      let color = '#28a745';
+      if (score > 60) color = '#ffc107';
+      if (score > 80) color = '#dc3545';
+
+      // Mensaje IA o humano
+      let mensaje = (score > 50) 
+        ? "Texto probablemente generado por IA 🤖" 
+        : "Texto probablemente humano 👤";
+
+      // Resaltar palabras largas
+      const highlighted = words.map(w => {
+        if (w.length > 7) {
+          return `<span class="ia-word">${w}</span>`;
+        }
+        return w;
+      }).join(' ');
+
+      // Mostrar resultados
+      document.getElementById('result').innerHTML = `${mensaje} (${score}%)<br><br>${highlighted}`;
+
+      const progress = document.getElementById('progress');
+      progress.style.width = score + '%';
+      progress.style.background = color;
+      progress.innerText = score + '%';
+    }
+  </script>
+</body>
+</html>
